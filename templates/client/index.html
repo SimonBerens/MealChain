@@ -150,7 +150,7 @@
               document.getElementById("public_key").innerHTML = response['public_key'];
               document.getElementById("warning").style.display = "block";
               $.ajax({
-                  url: "http://127.0.0.1:5001/transactions/new",
+                  url: "http://142.93.4.41:80/transactions/new",
                   type: "POST",
                   headers: {'Access-Control-Allow-Origin':'*'},
                   dataType : 'json',
