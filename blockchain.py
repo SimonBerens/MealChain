@@ -290,7 +290,7 @@ def mine():
     # We run the proof of work algorithm to get the next proof...
 
     if len(blockchain.transactions) is 0:
-        return {}, 408
+        return jsonify({}), 408
     last_block = blockchain.chain[-1]
     nonce = blockchain.proof_of_work()
 
