@@ -203,6 +203,7 @@ class Blockchain:
         max_length = len(self.chain)
 
         # Grab and verify the chains from all the nodes in our network
+        nodes_to_add = set()
         for node in neighbours:
             print('http://' + node + '/chain')
             response = requests.get('http://' + node + '/chain')
@@ -210,12 +211,14 @@ class Blockchain:
             if response.status_code == 200:
                 length = response.json()['length']
                 chain = response.json()['chain']
+                nodes = response.json()['nodes']
+                nodes_to_add.update({node for node in nodes if node not in self.nodes})
 
                 # Check if the length is longer and the chain is valid
                 if length > max_length and self.valid_chain(chain):
                     max_length = length
                     new_chain = chain
-
+        self.nodes.update(nodes_to_add)
         # Replace our chain if we discovered a new, valid chain longer than ours
         if new_chain:
             self.chain = new_chain
@@ -276,6 +279,7 @@ def full_chain():
     response = {
         'chain': blockchain.chain,
         'length': len(blockchain.chain),
+        'nodes': blockchain.nodes,
     }
     return jsonify(response), 200
 
