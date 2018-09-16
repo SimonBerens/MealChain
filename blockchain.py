@@ -27,7 +27,7 @@ class Blockchain:
 
         self.transactions = []
         self.chain = []
-        self.nodes = set()
+        self.nodes = set("142.93.4.41:80")  # bootnode
         # Generate random number to be used as node_id
         self.node_id = str(uuid4()).replace('-', '')
         # Create genesis block
@@ -102,7 +102,6 @@ class Blockchain:
                             balance -= transaction['value']
                         if transaction['recipient_address'] is sender_address:
                             balance += transaction['value']
-
 
                     last_block = block
                     current_index += 1
