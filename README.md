@@ -3,7 +3,7 @@ A blockchain implementation of a meal plan service
 
 Now live [here](http://142.93.4.41/)
 
-####Todos:
+#### Todos:
 * verify students.json
 * get domain name
 * change wallet creation reward
