@@ -1,13 +1,10 @@
 from collections import OrderedDict
 
 import binascii
-import json
-import Cryptodome.Random
 from Cryptodome.Hash import SHA
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Signature import PKCS1_v1_5
 
-import requests
 from flask import Flask, jsonify, request, render_template
 
 
@@ -53,34 +50,6 @@ def make_transaction():
 @app.route('/view/transactions')
 def view_transaction():
     return render_template('client/view_transactions.html')
-
-
-@app.route('/wallet/new', methods=['GET'])
-def new_wallet():
-    given_name = request.args.get("name")
-    given_id = request.args.get("id")
-    f = open("students.json", "r")
-    students = json.loads(f.read())
-    f.close()
-    valid = False
-    for student in students:
-        if student["id"] == given_id:
-            if student["name"] == given_name:
-                valid = not student["taken"]
-                student["taken"] = True
-            break
-    f = open("students.json", "w")
-    f.write(json.dumps(students))
-    f.close()
-    random_gen = Cryptodome.Random.new().read
-    private_key = RSA.generate(1024, random_gen)
-    public_key = private_key.publickey()
-    response = {
-        'private_key': binascii.hexlify(private_key.exportKey(format='DER')).decode('ascii'),
-        'public_key': binascii.hexlify(public_key.exportKey(format='DER')).decode('ascii'),
-        'valid': valid
-    }
-    return jsonify(response), 200
 
 
 @app.route('/generate/transaction', methods=['POST'])

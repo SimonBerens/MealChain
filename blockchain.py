@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 import binascii
 
+import Cryptodome
 from Cryptodome.Hash import SHA
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Signature import PKCS1_v1_5
@@ -27,6 +28,7 @@ class Blockchain:
 
         self.transactions = []
         self.chain = []
+        self.students = []  # todo parse from file
         self.nodes = set("142.93.4.41:80")  # bootnode
         # Generate random number to be used as node_id
         self.node_id = str(uuid4()).replace('-', '')
@@ -197,32 +199,36 @@ class Blockchain:
         """
         neighbours = self.nodes
         new_chain = None
-
+        nodes_to_add = set()
+        new_students = None
         # We're only looking for chains longer than ours
         max_length = len(self.chain)
 
         # Grab and verify the chains from all the nodes in our network
-        nodes_to_add = set()
+
         for node in neighbours:
             print('http://' + node + '/chain')
             response = requests.get('http://' + node + '/chain')
-
             if response.status_code == 200:
-                length = response.json()['length']
-                chain = response.json()['chain']
-                node_response = requests.get('http://' + node + '/nodes/get')
-                if node_response.status_code is 200:
-                    nodes = node_response.json()['nodes']
-                    nodes_to_add.update({node for node in nodes if node not in self.nodes})
+                response_json = response.json()
+                length = response_json['length']
+                chain = response_json['chain']
+                nodes = response_json['nodes']
+                students = response_json['students']
+                nodes_to_add.update({node for node in nodes if node not in self.nodes})
 
                 # Check if the length is longer and the chain is valid
                 if length > max_length and self.valid_chain(chain):
                     max_length = length
                     new_chain = chain
+                    new_students = students
+
         self.nodes.update(nodes_to_add)
         # Replace our chain if we discovered a new, valid chain longer than ours
         if new_chain:
             self.chain = new_chain
+            if new_students:
+                self.students = new_students
             return True
 
         return False
@@ -280,6 +286,8 @@ def full_chain():
     response = {
         'chain': blockchain.chain,
         'length': len(blockchain.chain),
+        'nodes': list(blockchain.nodes),
+        'students': blockchain.students
     }
     return jsonify(response), 200
 
@@ -346,11 +354,27 @@ def consensus():
     return jsonify(response), 200
 
 
-@app.route('/nodes/get', methods=['GET'])
-def get_nodes():
-    nodes = list(blockchain.nodes)
-    response = {'nodes': nodes}
+@app.route('/wallet/new', methods=['GET'])
+def new_wallet():
+    given_name = request.args.get("name")
+    given_id = request.args.get("id")
+    hashed_id = hashlib.sha3_256(given_id).digest()
+    for student in blockchain.students:
+        if student["id"] == hashed_id:
+            if student["name"] == given_name:
+                valid = not student["taken"]
+                student["taken"] = True  # will always be true after this
+            break
+    random_gen = Cryptodome.Random.new().read
+    private_key = RSA.generate(1024, random_gen)
+    public_key = private_key.publickey()
+    response = {
+        'private_key': binascii.hexlify(private_key.exportKey(format='DER')).decode('ascii'),
+        'public_key': binascii.hexlify(public_key.exportKey(format='DER')).decode('ascii'),
+        'valid': valid
+    }
     return jsonify(response), 200
+
 
 if __name__ == '__main__':
     from argparse import ArgumentParser

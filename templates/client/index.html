@@ -46,8 +46,6 @@
       </div>
     </nav>
 
-
-
     <div class="container">
       <div class="row">
         <div class="col-lg-12 text-center">
@@ -142,7 +140,7 @@
         $('#generateWallet').click(function(){
 
           $.ajax({
-            url: `/wallet/new?id=${$("#studentID").val()}&&name=${$("#studentName").val()}`,
+            url: `http://142.93.4.41:80/wallet/new?id=${$("#studentID").val()}&&name=${$("#studentName").val()}`,
             type: 'GET',
             success: function(response){
                 if (!response.valid) {
