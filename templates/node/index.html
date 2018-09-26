@@ -113,7 +113,7 @@
           success: function(response){
 
               //Generate Transactions Table
-              var transactions = [];
+              let transactions = [];
               count = 1;
 
               for (i = 0; i < response['transactions'].length; i++) { 
@@ -153,16 +153,16 @@
 
             //console.log(response);
             //Generate Transactions Table
-            var transactions = [];
-            count = 1;
+            let transactions = [];
+            let count = 1;
 
             for (i = 1; i < response.length; i++) { 
               for (j = 0; j < response["chain"][i]["transactions"].length; j++) {
 
                 //format date 
-                var options = {  year: "numeric", month: "short",  day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit"  };
-                var date = new Date(response["chain"][i]["timestamp"] * 1000);
-                var formattedDateTime = date.toLocaleTimeString("en-us", options);
+                let options = {  year: "numeric", month: "short",  day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit"  };
+                let date = new Date(response["chain"][i]["timestamp"] * 1000);
+                let formattedDateTime = date.toLocaleTimeString("en-us", options);
 
                 transaction = [count,
                               response["chain"][i]["transactions"][j]["recipient_address"],
