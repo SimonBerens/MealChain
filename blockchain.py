@@ -1,3 +1,4 @@
+import os
 from collections import OrderedDict
 
 import binascii
@@ -28,7 +29,11 @@ class Blockchain:
 
         self.transactions = []
         self.chain = []
-        self.students = []  # todo parse from file
+        self.students = []
+        # for bootnode
+        if os.path.isFile('/students.json'):
+            f = open('r', '/students.json')
+            self.students = json.loads(f.read())
         self.nodes = set("142.93.4.41:80")  # bootnode
         # Generate random number to be used as node_id
         self.node_id = str(uuid4()).replace('-', '')
