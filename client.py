@@ -1,6 +1,8 @@
 from collections import OrderedDict
 
 import binascii
+
+import requests
 from Cryptodome.Hash import SHA
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Signature import PKCS1_v1_5
@@ -35,7 +37,6 @@ class Transaction:
 
 
 app = Flask(__name__)
-
 
 @app.route('/')
 def index():
