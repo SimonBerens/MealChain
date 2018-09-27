@@ -363,7 +363,7 @@ def consensus():
 def new_wallet():
     given_name = request.args.get("name")
     given_id = request.args.get("id")
-    hashed_id = hashlib.sha3_256(given_id).digest()
+    hashed_id = hashlib.sha256(given_id).hexdigest()
     for student in blockchain.students:
         if student["id"] == hashed_id:
             if student["name"] == given_name:
