@@ -31,7 +31,7 @@ class Blockchain:
         self.chain = []
         self.students = []
         # for bootnode
-        if os.path.isFile('/students.json'):
+        if os.path.isfile('/students.json'):
             f = open('r', '/students.json')
             self.students = json.loads(f.read())
         self.nodes = set("142.93.4.41:80")  # bootnode
