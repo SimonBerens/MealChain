@@ -141,41 +141,31 @@
     $(function () {
         $('#generateWallet').click(function () {
             $.ajax({
-                url: 'http://142.93.4.41:80/chain',
+                url: `http://http://142.93.4.41/wallet/new?id=${$("#studentID").val()}&&name=${$("#studentName").val()}`,
                 type: 'GET',
-                success: (response) => {
-                    let nodes = response.nodes;
-                    nodes.forEach((element)=> {
-                        console.log(element);
-                        $.ajax({
-                            url: `http://${element}/wallet/new?id=${$("#studentID").val()}&&name=${$("#studentName").val()}`,
-                            type: 'GET',
-                            success: function (response) {
-                                if (!response.valid) {
-                                    alert("Invalid ID, name, or already created");
-                                    return;
-                                }
-                                document.getElementById("private_key").innerHTML = response['private_key'];
-                                document.getElementById("public_key").innerHTML = response['public_key'];
-                                document.getElementById("warning").style.display = "block";
-                                $.ajax({
-                                    url: "http://142.93.4.41:80/transactions/new",
-                                    type: "POST",
-                                    headers: {'Access-Control-Allow-Origin': '*'},
-                                    dataType: 'json',
-                                    data: {
-                                        "sender_address": "THE BLOCKCHAIN",
-                                        "recipient_address": $("#public_key").val(),
-                                        "amount": "1000",
-                                        "signature": ""
-                                    }
-                                });
-                            },
-                            error: function (error) {
-                                console.log(error);
-                            }
-                        });
-                    })
+                success: function (response) {
+                    if (!response.valid) {
+                        alert("Invalid ID, name, or already created");
+                        return;
+                    }
+                    document.getElementById("private_key").innerHTML = response['private_key'];
+                    document.getElementById("public_key").innerHTML = response['public_key'];
+                    document.getElementById("warning").style.display = "block";
+                    $.ajax({
+                        url: `http://${element}/transactions/new`,
+                        type: "POST",
+                        headers: {'Access-Control-Allow-Origin': '*'},
+                        dataType: 'json',
+                        data: {
+                            "sender_address": "THE BLOCKCHAIN",
+                            "recipient_address": $("#public_key").val(),
+                            "amount": "1000",
+                            "signature": ""
+                        }
+                    });
+                },
+                error: function (error) {
+                    console.log(error);
                 }
             });
         });
