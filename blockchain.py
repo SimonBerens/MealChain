@@ -3,7 +3,6 @@ from collections import OrderedDict
 
 import binascii
 
-import Cryptodome
 from Cryptodome.Hash import SHA
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Signature import PKCS1_v1_5
@@ -366,7 +365,7 @@ def new_wallet():
     given_id = request.args.get("id")
     hashed_id = hashlib.sha256(given_id.encode('UTF-8')).hexdigest()
     valid = False
-    for student in blockchain.students.items():
+    for student in blockchain.students:
         if student["id"] == hashed_id:
             if student["name"] == given_name:
                 valid = not student["taken"]
