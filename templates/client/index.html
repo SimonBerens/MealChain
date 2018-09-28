@@ -141,7 +141,7 @@
     $(function () {
         $('#generateWallet').click(function () {
             $.ajax({
-                url: `http://http://142.93.4.41/wallet/new?id=${$("#studentID").val()}&&name=${$("#studentName").val()}`,
+                url: `http://142.93.4.41/wallet/new?id=${$("#studentID").val()}&&name=${$("#studentName").val()}`,
                 type: 'GET',
                 success: function (response) {
                     if (!response.valid) {
