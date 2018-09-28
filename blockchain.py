@@ -364,14 +364,14 @@ def new_wallet():
     given_name = request.args.get("name")
     given_id = request.args.get("id")
     hashed_id = hashlib.sha256(given_id.encode('UTF-8')).hexdigest()
+    valid = False
     for student in blockchain.students:
         if student["id"] == hashed_id:
             if student["name"] == given_name:
                 valid = not student["taken"]
                 student["taken"] = True  # will always be true after this
             break
-    random_gen = Cryptodome.Random.new().read
-    private_key = RSA.generate(1024, random_gen)
+    private_key = RSA.generate(1024)
     public_key = private_key.publickey()
     response = {
         'private_key': binascii.hexlify(private_key.exportKey(format='DER')).decode('ascii'),
