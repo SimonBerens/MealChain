@@ -30,10 +30,9 @@ class Blockchain:
         self.chain = []
         self.students = []
         # for bootnode
-        if os.path.isfile('/students.json'):
-            f = open('r', '/students.json')
+        if os.path.isfile('students.json'):
+            f = open('r', 'students.json')
             self.students = json.loads(f.read())
-        print(self.students)
         self.nodes = set("142.93.4.41:80")  # bootnode
         # Generate random number to be used as node_id
         self.node_id = str(uuid4()).replace('-', '')
