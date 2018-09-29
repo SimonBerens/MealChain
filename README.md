@@ -12,3 +12,4 @@ Now live [here](http://142.93.4.41/)
 * add cookie for public/private key
 * ~~client side node distribution~~
 * make client send to random node
+* give client identity
