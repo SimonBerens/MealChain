@@ -10,5 +10,4 @@ Now live [here](http://142.93.4.41/)
 * ~~add branding~~
 * ~~add link to client from blockchain~~
 * add cookie for public/private key
-* ~~client side node distribution~~
-* make client send to random node
+* client side node distribution
