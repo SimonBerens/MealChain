@@ -121,8 +121,7 @@
                         <label for="exampleInputPassword1"> Full Name</label>
                         <input class="form-control" id="studentName">
                     </div>
-                    <input type="button" id="generateWallet" class="btn btn-primary" value="Submit"></input>
-                </form>
+                    <input type="button" id="generateWallet" class="btn btn-primary" value="Submit">                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -152,7 +151,7 @@
                     document.getElementById("public_key").innerHTML = response['public_key'];
                     document.getElementById("warning").style.display = "block";
                     $.ajax({
-                        url: `http://${element}/transactions/new`,
+                        url: `http://142.93.4.41/transactions/new`,
                         type: "POST",
                         headers: {'Access-Control-Allow-Origin': '*'},
                         dataType: 'json',
