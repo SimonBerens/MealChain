@@ -364,7 +364,6 @@ def new_wallet():
     given_id = request.args.get("id")
     hashed_id = hashlib.sha256(given_id.encode('UTF-8')).hexdigest()
     valid = False
-    print(blockchain.students)
     for student in blockchain.students:
         if student["id"] == hashed_id:
             if student["name"] == given_name:
