@@ -25,7 +25,6 @@ MINING_DIFFICULTY = 2
 class Blockchain:
 
     def __init__(self):
-
         self.transactions = []
         self.chain = []
         self.students = []
@@ -33,11 +32,15 @@ class Blockchain:
         if os.path.exists('students.json'):
             f = open('students.json', 'r')
             self.students = json.loads(f.read())
-        self.nodes = set("142.93.4.41:80")  # bootnode
+        self.nodes = set()
+        self.register_node("142.93.4.41:80")  # bootnode
         # Generate random number to be used as node_id
         self.node_id = str(uuid4()).replace('-', '')
-        # Create genesis block
-        self.create_block(0, '00')
+        # Mine genesis block
+        block = self.create_block(0, '00', [])
+        self.proof_of_work(block)
+        self.chain.append(block)
+        self.transactions = []
 
     def register_node(self, node_url):
         """
@@ -70,68 +73,60 @@ class Blockchain:
         transaction = OrderedDict({'sender_address': sender_address,
                                    'recipient_address': recipient_address,
                                    'value': value})
-
+        print("Submitting transaction")
         # Reward for mining a block
         if sender_address == MINING_SENDER:
+            print("This is a reward block")
             self.transactions.append(transaction)
             return len(self.chain) + 1
         # Manages transactions from wallet to another wallet
         else:
+            print("This is a transaction block")
             transaction_verification = self.verify_transaction_signature(sender_address, signature, transaction)
             if transaction_verification:
-                last_block = self.chain[0]
                 current_index = 1
-
                 balance = 0
                 while current_index < len(self.chain):
                     block = self.chain[current_index]
-                    # print(last_block)
-                    # print(block)
+                    last_block = self.chain[current_index - 1]
                     # print("\n-----------\n")
                     # Check that the hash of the block is correct
                     if block['previous_hash'] != self.hash(last_block):
+                        print("hashes are not equal!")
                         return False
 
-                    # Check that the Proof of Work is correct
-                    # Delete the reward transaction
-                    transactions = block['transactions'][:-1]
-                    # Need to make sure that the dictionary is ordered. Otherwise we'll get a different hash
-                    transaction_elements = ['sender_address', 'recipient_address', 'value']
-                    transactions = [OrderedDict((k, transaction[k]) for k in transaction_elements) for transaction in
-                                    transactions]
-
-                    if not self.valid_proof(transactions, block['previous_hash'], block['nonce'], MINING_DIFFICULTY):
+                    if not self.valid_block(block):
+                        print("invalid proof!")
                         return False
 
-                    for transaction in transactions:
-                        if transaction['sender_address'] is sender_address:
-                            balance -= transaction['value']
-                        if transaction['recipient_address'] is sender_address:
-                            balance += transaction['value']
-
-                    last_block = block
+                    for transaction in block['transactions']:
+                        if i_have_no_idea(transaction['sender_address'], sender_address):
+                            balance -= int(transaction['value'])
+                        if i_have_no_idea(transaction['recipient_address'], sender_address):
+                            balance += int(transaction['value'])
                     current_index += 1
-                self.transactions.append(transaction)
+
                 if float(value) > balance:
+                    print("value:" + str(value))
+                    print("balance:" + str(balance))
                     return False
+                self.transactions.append(transaction)
                 return len(self.chain) + 1
             else:
+                print("invalid transaction verification!")
                 return False
 
-    def create_block(self, nonce, previous_hash):
+    def create_block(self, nonce, previous_hash, transactions):
         """
         Add a block of transactions to the blockchain
         """
         block = {'block_number': len(self.chain) + 1,
                  'timestamp': time(),
-                 'transactions': self.transactions,
+                 'transactions': transactions,
                  'nonce': nonce,
                  'previous_hash': previous_hash}
-
+        print("hash: " + self.hash(block))
         # Reset the current list of transactions
-        self.transactions = []
-
-        self.chain.append(block)
         return block
 
     def hash(self, block):
@@ -140,33 +135,32 @@ class Blockchain:
         """
         # We must make sure that the Dictionary is Ordered, or we'll have inconsistent hashes
         block_string = json.dumps(block, sort_keys=True).encode()
-
         return hashlib.sha256(block_string).hexdigest()
 
-    def proof_of_work(self):
+    def proof_of_work(self, block):
         """
         Proof of work algorithm
         """
-        last_block = self.chain[-1]
-        last_hash = self.hash(last_block)
+        # last_block = self.chain[-1]
+        # last_hash = self.hash(last_block)
 
-        nonce = 0
-        while self.valid_proof(self.transactions, last_hash, nonce) is False:
-            nonce += 1
+        while self.valid_block(block) is False:
+            block['nonce'] += 1
 
-        return nonce
+        return block['nonce']
 
-    def valid_proof(self, transactions, last_hash, nonce, difficulty=MINING_DIFFICULTY):
+    def valid_block(self, block, difficulty=MINING_DIFFICULTY):
         """
         Check if a hash value satisfies the mining conditions. This function is used within the proof_of_work function.
         """
-        guess = (str(transactions) + str(last_hash) + str(nonce)).encode()
-        guess_hash = hashlib.sha256(guess).hexdigest()
-        return guess_hash[:difficulty] == '0' * difficulty
+        print(self.hash(block))
+        # guess = (str(transactions) + str(last_hash) + str(nonce)).encode()
+        # guess_hash = hashlib.sha256(guess).hexdigest()
+        return self.hash(block)[:difficulty] == '0' * difficulty
 
     def valid_chain(self, chain):
         """
-        check if a bockchain is valid
+        check if a blockchain is valid
         """
         last_block = chain[0]
         current_index = 1
@@ -181,14 +175,13 @@ class Blockchain:
                 return False
 
             # Check that the Proof of Work is correct
-            # Delete the reward transaction
-            transactions = block['transactions'][:-1]
+            transactions = block['transactions']
             # Need to make sure that the dictionary is ordered. Otherwise we'll get a different hash
             transaction_elements = ['sender_address', 'recipient_address', 'value']
             transactions = [OrderedDict((k, transaction[k]) for k in transaction_elements) for transaction in
                             transactions]
 
-            if not self.valid_proof(transactions, block['previous_hash'], block['nonce'], MINING_DIFFICULTY):
+            if not self.valid_block(block):
                 return False
 
             last_block = block
@@ -246,6 +239,15 @@ CORS(app)
 blockchain = Blockchain()
 
 
+def i_have_no_idea(str1, str2):
+    for i, c in enumerate(str1):
+        if str1[i] is not str2[i]:
+            print(str1[i - 5:i])
+            return False
+    else:
+        return True
+
+
 @app.route('/')
 def index():
     return render_template('node/index.html')
@@ -301,9 +303,8 @@ def mine():
     # We run the proof of work algorithm to get the next proof...
 
     if len(blockchain.transactions) is 0:
-        return jsonify({}), 408
+        return jsonify({'message': 'No blocks to mine!'}), 408
     last_block = blockchain.chain[-1]
-    nonce = blockchain.proof_of_work()
 
     # We must receive a reward for finding the proof.
     blockchain.submit_transaction(sender_address=MINING_SENDER, recipient_address=blockchain.node_id,
@@ -311,8 +312,13 @@ def mine():
 
     # Forge the new Block by adding it to the chain
     previous_hash = blockchain.hash(last_block)
-    block = blockchain.create_block(nonce, previous_hash)
-
+    # previous_hash = last_block['previous_hash']
+    print("prev_hash: " + previous_hash)
+    block = blockchain.create_block(0, previous_hash, blockchain.transactions)
+    blockchain.proof_of_work(block)
+    print("final nonce: " + str(block['nonce']))
+    blockchain.chain.append(block)
+    blockchain.transactions = []
     response = {
         'message': "New Block Forged",
         'block_number': block['block_number'],

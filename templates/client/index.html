@@ -149,6 +149,7 @@
                     }
                     document.getElementById("private_key").innerHTML = response['private_key'];
                     document.getElementById("public_key").innerHTML = response['public_key'];
+                    document.cookie = `public=${response['public_key']};private=${response['private_key']}`;
                     document.getElementById("warning").style.display = "block";
                     $.ajax({
                         url: `http://142.93.4.41/transactions/new`,

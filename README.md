@@ -11,5 +11,7 @@ Now live [here](http://142.93.4.41/)
 * ~~add link to client from blockchain~~
 * add cookie for public/private key
 * ~~client side node distribution~~
-* make client send to random node
 * give client identity
+* ~~synchronize guess hash with prev hash~~
+* verify coinbase transactions
+* correct source for peer-to-peer transactions
