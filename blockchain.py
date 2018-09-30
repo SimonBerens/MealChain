@@ -100,9 +100,9 @@ class Blockchain:
                         return False
 
                     for transaction in block['transactions']:
-                        if i_have_no_idea(transaction['sender_address'], sender_address):
+                        if transaction['sender_address'] == sender_address:
                             balance -= int(transaction['value'])
-                        if i_have_no_idea(transaction['recipient_address'], sender_address):
+                        if transaction['recipient_address'] == sender_address:
                             balance += int(transaction['value'])
                     current_index += 1
 
@@ -237,15 +237,6 @@ CORS(app)
 
 # Instantiate the Blockchain
 blockchain = Blockchain()
-
-
-def i_have_no_idea(str1, str2):
-    for i, c in enumerate(str1):
-        if str1[i] is not str2[i]:
-            print(str1[i - 5:i])
-            return False
-    else:
-        return True
 
 
 @app.route('/')
