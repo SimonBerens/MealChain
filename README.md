@@ -13,5 +13,7 @@ Now live [here](http://142.93.4.41/)
 * ~~client side node distribution~~
 * give client identity
 * ~~synchronize guess hash with prev hash~~
-* verify coinbase transactions
-* correct source for peer-to-peer transactions
+* ~~verify wallet creation coinbase transactions~~
+* ~~verify mining coinbase transactions~~
+* backup students
+* ~~correct source for peer-to-peer transactions~~

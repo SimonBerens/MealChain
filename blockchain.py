@@ -19,6 +19,7 @@ from flask_cors import CORS
 
 MINING_SENDER = "THE BLOCKCHAIN"
 MINING_REWARD = 100
+WALLET_REWARD = 1000
 MINING_DIFFICULTY = 2
 
 
@@ -37,7 +38,7 @@ class Blockchain:
         # Generate random number to be used as node_id
         self.node_id = str(uuid4()).replace('-', '')
         # Mine genesis block
-        block = self.create_block(0, '00', [])
+        block = self.create_block(0, '00', [], MINING_SENDER)
         self.proof_of_work(block)
         self.chain.append(block)
         self.transactions = []
@@ -84,31 +85,8 @@ class Blockchain:
             print("This is a transaction block")
             transaction_verification = self.verify_transaction_signature(sender_address, signature, transaction)
             if transaction_verification:
-                current_index = 1
-                balance = 0
-                while current_index < len(self.chain):
-                    block = self.chain[current_index]
-                    last_block = self.chain[current_index - 1]
-                    # print("\n-----------\n")
-                    # Check that the hash of the block is correct
-                    if block['previous_hash'] != self.hash(last_block):
-                        print("hashes are not equal!")
-                        return False
-
-                    if not self.valid_block(block):
-                        print("invalid proof!")
-                        return False
-
-                    for transaction in block['transactions']:
-                        if transaction['sender_address'] == sender_address:
-                            balance -= int(transaction['value'])
-                        if transaction['recipient_address'] == sender_address:
-                            balance += int(transaction['value'])
-                    current_index += 1
-
-                if float(value) > balance:
-                    print("value:" + str(value))
-                    print("balance:" + str(balance))
+                if not self.valid_chain(self.chain, {'sender_address': sender_address, 'value': value}):
+                    print('invalid chain')
                     return False
                 self.transactions.append(transaction)
                 return len(self.chain) + 1
@@ -116,7 +94,7 @@ class Blockchain:
                 print("invalid transaction verification!")
                 return False
 
-    def create_block(self, nonce, previous_hash, transactions):
+    def create_block(self, nonce, previous_hash, transactions, creator):
         """
         Add a block of transactions to the blockchain
         """
@@ -124,8 +102,8 @@ class Blockchain:
                  'timestamp': time(),
                  'transactions': transactions,
                  'nonce': nonce,
+                 'creator': creator,
                  'previous_hash': previous_hash}
-        print("hash: " + self.hash(block))
         # Reset the current list of transactions
         return block
 
@@ -153,41 +131,44 @@ class Blockchain:
         """
         Check if a hash value satisfies the mining conditions. This function is used within the proof_of_work function.
         """
-        print(self.hash(block))
-        # guess = (str(transactions) + str(last_hash) + str(nonce)).encode()
-        # guess_hash = hashlib.sha256(guess).hexdigest()
         return self.hash(block)[:difficulty] == '0' * difficulty
 
-    def valid_chain(self, chain):
+    def valid_chain(self, chain, transaction_info=None):
         """
         check if a blockchain is valid
         """
-        last_block = chain[0]
-        current_index = 1
-
-        while current_index < len(chain):
-            block = chain[current_index]
-            # print(last_block)
-            # print(block)
-            # print("\n-----------\n")
-            # Check that the hash of the block is correct
+        balance = 0
+        created_wallets = set()
+        for i in range(1, len(chain)):
+            last_block = chain[i - 1]
+            block = chain[i]
             if block['previous_hash'] != self.hash(last_block):
                 return False
-
-            # Check that the Proof of Work is correct
-            transactions = block['transactions']
-            # Need to make sure that the dictionary is ordered. Otherwise we'll get a different hash
-            transaction_elements = ['sender_address', 'recipient_address', 'value']
-            transactions = [OrderedDict((k, transaction[k]) for k in transaction_elements) for transaction in
-                            transactions]
-
             if not self.valid_block(block):
                 return False
+            if transaction_info:
+                sender_address = transaction_info['sender_address']
+                rewards = set()
+                for transaction in block['transactions']:
+                    value = int(transaction['value'])
+                    if transaction['sender_address'] == sender_address:
+                        balance -= value
+                    if transaction['recipient_address'] == sender_address:
+                        if sender_address == MINING_SENDER:
+                            if value is WALLET_REWARD and sender_address not in created_wallets:
+                                balance += value
+                            if value is MINING_REWARD and\
+                                    sender_address == block['creator'] and\
+                                    sender_address not in rewards:
+                                balance += value
+                                rewards.add(sender_address)
 
-            last_block = block
-            current_index += 1
+                        else:
+                            balance += value
+                    if transaction['sender_address'] == MINING_SENDER and value is MINING_REWARD:
+                        created_wallets.add(transaction['sender_address'])
 
-        return True
+        return float(transaction_info['value']) < balance if transaction_info else True
 
     def resolve_conflicts(self):
         """
@@ -257,6 +238,7 @@ def new_transaction():
     required = ['sender_address', 'recipient_address', 'amount', 'signature']
     if not all(k in values for k in required):
         return 'Missing values', 400
+    print('sender address: ' + values['sender_address'])
     # Create a new Transaction
     transaction_result = blockchain.submit_transaction(values['sender_address'], values['recipient_address'],
                                                        values['amount'], values['signature'])
@@ -303,11 +285,8 @@ def mine():
 
     # Forge the new Block by adding it to the chain
     previous_hash = blockchain.hash(last_block)
-    # previous_hash = last_block['previous_hash']
-    print("prev_hash: " + previous_hash)
-    block = blockchain.create_block(0, previous_hash, blockchain.transactions)
+    block = blockchain.create_block(0, previous_hash, blockchain.transactions, blockchain.node_id)
     blockchain.proof_of_work(block)
-    print("final nonce: " + str(block['nonce']))
     blockchain.chain.append(block)
     blockchain.transactions = []
     response = {
